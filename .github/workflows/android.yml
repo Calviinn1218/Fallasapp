@@ -8,38 +8,65 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    name: Compile APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
+      # 1. Clona el repositorio
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Establece Python 3.9 (compatible con Buildozer)
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: '3.9'
 
-      - name: Install system dependencies
+      # 3. Instala dependencias del sistema y Buildozer
+      - name: Install system and Python dependencies
         run: |
           sudo apt update
           sudo apt install -y \
-            zip unzip openjdk-17-jdk python3-pip git libncurses5 \
-            libffi-dev libssl-dev build-essential libsqlite3-dev \
-            libbz2-dev libreadline-dev liblzma-dev zlib1g-dev
+            zip unzip openjdk-17-jdk \
+            python3-pip python3-setuptools \
+            python3-dev build-essential \
+            libffi-dev libssl-dev \
+            libjpeg-dev zlib1g-dev \
+            libncurses5 libncurses5-dev \
+            libsqlite3-dev libgdbm-dev \
+            libbz2-dev libreadline-dev \
+            liblzma-dev git
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --user --upgrade Cython buildozer
 
-      - name: Install buildozer and dependencies
+      # 4. Verifica que el archivo buildozer.spec exista
+      - name: Check buildozer.spec exists
         run: |
-          pip install --upgrade pip
-          pip install cython==0.29.36
-          pip install buildozer
+          if [ ! -f fallasapp/buildozer.spec ]; then
+            echo "❌ El archivo buildozer.spec no se encuentra en la carpeta fallasapp/"
+            exit 1
+          fi
 
-      - name: Build APK
+      # 5. Compila el APK
+      - name: Build APK with Buildozer
         run: |
-    cd fallasapp
-    buildozer android debug
+          cd fallasapp
+          buildozer android debug
 
+      # 6. Verifica si se generó el APK
+      - name: Check if APK exists
+        run: |
+          if ls fallasapp/bin/*.apk 1> /dev/null 2>&1; then
+            echo "✅ APK generado correctamente"
+          else
+            echo "❌ Error: No se encontró el archivo APK"
+            exit 1
+          fi
+
+      # 7. Sube el APK como artefacto
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: fallasapp-apk
-          path: bin/*.apk
+          name: fallasapp-debug-apk
+          path: fallasapp/bin/*.apk
