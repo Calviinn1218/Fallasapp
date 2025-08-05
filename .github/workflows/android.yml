@@ -34,7 +34,7 @@ jobs:
           pip install buildozer
 
       - name: Build APK
-  run: |
+        run: |
     cd fallasapp
     buildozer android debug
 
