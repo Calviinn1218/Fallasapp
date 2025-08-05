@@ -8,23 +8,30 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-3.14.0-rc.1-linux-22.04-arm64-freethreaded.tar.gz
+          python-version: 3.9
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y zip unzip openjdk-17-jdk python3-pip git libncurses6 build-essential libssl-dev libffi-dev python3-dev
+          sudo apt update
+          sudo apt install -y \
+            zip unzip openjdk-17-jdk python3-pip git libncurses5 \
+            libffi-dev libssl-dev build-essential libsqlite3-dev \
+            libbz2-dev libreadline-dev liblzma-dev zlib1g-dev
+
+      - name: Install buildozer and dependencies
+        run: |
           pip install --upgrade pip
-          pip install buildozer cython
+          pip install cython==0.29.36
+          pip install buildozer
 
       - name: Build APK
         run: buildozer android debug
