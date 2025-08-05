@@ -34,7 +34,9 @@ jobs:
           pip install buildozer
 
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          cd app  fallasapp
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
